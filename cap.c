@@ -2,10 +2,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+
 #include "cap.h"
 
-void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
-  printf("new pkg!\n");
+#define SIZE_ETHERNET 14
+#define ETH_ADDR_LEN	6
+#define IP_ADDR_LEN	  4
+
+struct arp_hdr {
+	u_int16_t arp_htype;
+	u_int16_t arp_ptype;
+	u_char    arp_hlen;
+	u_char    arp_plen;
+	u_int16_t arp_oper;
+	u_char    arp_sha[ETH_ADDR_LEN];
+	u_char    arp_sip[IP_ADDR_LEN];
+	u_char    arp_dha[ETH_ADDR_LEN];
+	u_char    arp_dip[IP_ADDR_LEN];
+};
+
+/* We assume we can just receive ARP here */
+void got_packet (u_char *args, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
+  struct host_list *tmp = (struct host_list *)args;
+	char sourceip[16];
+	const struct arp_hdr *arp = (struct arp_hdr *)(packet + SIZE_ETHERNET);
+  snprintf (sourceip, 16, "%d.%d.%d.%d", arp->arp_sip[0], arp->arp_sip[1], arp->arp_sip[2], arp->arp_sip[3]);
+
+  while(tmp->next != NULL)
+    tmp = tmp->next;
+  tmp->next = malloc(sizeof(struct host_list));
+  strncpy(tmp->next->ip, sourceip, 16);
 }
 
 void* cap(void* args) {
@@ -25,6 +52,8 @@ void* cap(void* args) {
 	/* Sniffing */
 	const u_char *packet;
 	struct pcap_pkthdr header;
+
+  s->list = malloc(sizeof(struct host_list));
 
 	if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
 	  fprintf(stderr, "%s\n", errbuf);
@@ -59,7 +88,7 @@ void* cap(void* args) {
     return NULL;
   }
 
-	if(pcap_loop(handle, -1, got_packet, NULL) == -1) {
+	if(pcap_loop(handle, -1, got_packet, (u_char *)s->list) == -1) {
 		fprintf(stderr, "%s\n", pcap_geterr(handle));
 		return NULL;
 	}

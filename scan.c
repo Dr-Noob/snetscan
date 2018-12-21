@@ -106,4 +106,11 @@ int main() {
     return EXIT_FAILURE;
   }
 
+	struct host_list *list = caps.list->next;
+	while(list->next != NULL) {
+		printf("%s\n", list->ip);
+		list = list->next;
+	}
+	printf("%s\n", list->ip);
+
 }
