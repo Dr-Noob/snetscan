@@ -35,7 +35,7 @@ void got_packet (u_char *args, const struct pcap_pkthdr *pkthdr, const u_char *p
 	const struct arp_hdr *arp = (struct arp_hdr *)(packet + SIZE_ETHERNET);
 
   snprintf (sourceip,  16, "%d.%d.%d.%d", arp->arp_sip[0], arp->arp_sip[1], arp->arp_sip[2], arp->arp_sip[3]);
-	snprintf (sourcemac, 18, "%x:%x:%x:%d:%x:%x", arp->arp_sha[0], arp->arp_sha[1], arp->arp_sha[2], arp->arp_sha[3], arp->arp_sha[4], arp->arp_sha[5]);
+	snprintf (sourcemac, 18, "%x:%x:%x:%x:%x:%x", arp->arp_sha[0], arp->arp_sha[1], arp->arp_sha[2], arp->arp_sha[3], arp->arp_sha[4], arp->arp_sha[5]);
   ip = inet_addr(sourceip);
 
   while(!repeated && tmp->next != NULL && tmp->next->ip <= ip) {
@@ -46,19 +46,16 @@ void got_packet (u_char *args, const struct pcap_pkthdr *pkthdr, const u_char *p
 		if(tmp->next == NULL) {
 		  tmp->next = malloc(sizeof(struct host_list));
 		  tmp->next->next = NULL;
-		  tmp->next->ip = ip;
-		  strncpy(tmp->next->ip_str, sourceip, 16);
-		  strncpy(tmp->next->mac_str, sourcemac, 18);
 	  }
 		else {
       p = tmp->next;
 			tmp->next = malloc(sizeof(struct host_list));
 			tmp->next->next = p;
-			tmp->next->ip = ip;
-		  strncpy(tmp->next->ip_str, sourceip, 16);
-		  strncpy(tmp->next->mac_str, sourcemac, 18);
 		}
 
+		tmp->next->ip = ip;
+		strncpy(tmp->next->ip_str, sourceip, 16);
+		strncpy(tmp->next->mac_str, sourcemac, 18);
 	}
 }
 
