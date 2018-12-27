@@ -9,7 +9,12 @@
 #include "cap.h"
 
 int main() {
+	bpf_u_int32 mask;
+	bpf_u_int32 net;
+	char pcap_errbuf[PCAP_ERRBUF_SIZE];
+
 	libnet_t *l;
+	libnet_ptag_t arp_tag = 0;
 	int bytes_written;
 	char errbuf[LIBNET_ERRBUF_SIZE];
 	u_int8_t mac_broadcast_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -19,10 +24,6 @@ int main() {
 	const char* devname;
 	u_int32_t src_ip_addr;
 	struct libnet_ether_addr *src_mac_addr;
-
-	/* Target host */
-	u_int32_t target_ip_addr;
-	char target_ip_addr_str[16] = "192.168.1.61";
 
   /* Capture thread */
 	sem_t thread_sem;
@@ -64,6 +65,11 @@ int main() {
 
 	printf("Using interface: '%s'\n",devname);
 
+	if (pcap_lookupnet(devname, &net, &mask, pcap_errbuf) == -1) {
+		fprintf(stderr, "%s\n", errbuf);
+		return EXIT_FAILURE;
+	}
+
 	if ((src_ip_addr = libnet_get_ipaddr4(l)) == -1 ) {
 		fprintf(stderr, "%s\n", libnet_geterror(l));
 		libnet_destroy(l);
@@ -76,34 +82,45 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
-	printf("Target IP address: '%s'\n", target_ip_addr_str);
+  mask = htonl(mask);
+  uint32_t network_address   = htonl(src_ip_addr) & mask;
+  uint32_t broadcast_address = htonl(src_ip_addr) | ~mask;
+	printf("Scanning from %d.%d.%d.%d to %d.%d.%d.%d\n",   (network_address + 1 & 0xFF000000) >> 24,
+																						             (network_address + 1 & 0x00FF0000) >> 16,
+																						             (network_address + 1 & 0x0000FF00) >> 8,
+																							            network_address + 1 & 0x000000FF,
+																											 (broadcast_address - 1 & 0xFF000000) >> 24,
+																											 (broadcast_address - 1 & 0x00FF0000) >> 16,
+																											 (broadcast_address - 1 & 0x0000FF00) >> 8,
+																												broadcast_address - 1 & 0x000000FF);
 
-	if ((target_ip_addr = libnet_name2addr4(l, target_ip_addr_str, LIBNET_DONT_RESOLVE)) == -1) {
-		fprintf(stderr, "%s\n", libnet_geterror(l));
-		libnet_destroy(l);
-		return EXIT_FAILURE;
+	for (uint32_t ip = network_address + 1; ip < broadcast_address; ip++) {
+	  uint32_t target_ip_addr = ntohl(ip);
+		if ((arp_tag = libnet_build_arp (ARPHRD_ETHER, ETHERTYPE_IP, 6, 4, ARPOP_REQUEST, src_mac_addr->ether_addr_octet, (u_int8_t*)(&src_ip_addr), mac_zero_addr, (u_int8_t*)(&target_ip_addr), NULL, 0, l, arp_tag)) == -1) {
+			fprintf(stderr, "%s\n", libnet_geterror(l));
+			libnet_destroy(l);
+			return EXIT_FAILURE;
+		}
+
+		if(ip == network_address + 1) {
+			/* Just build at first iteration(reused in the others iterations) */
+		  if (libnet_autobuild_ethernet (mac_broadcast_addr, ETHERTYPE_ARP, l) == -1 ) {
+			  fprintf(stderr, "%s\n", libnet_geterror(l));
+			  libnet_destroy(l);
+			  return EXIT_FAILURE;
+		  }
+		}
+
+		bytes_written = libnet_write(l);
+		if (bytes_written == -1)
+		  fprintf(stderr, "%s\n", libnet_geterror(l));
+
 	}
-
-	if (libnet_autobuild_arp (ARPOP_REQUEST, src_mac_addr->ether_addr_octet, (u_int8_t*)(&src_ip_addr), mac_zero_addr, (u_int8_t*)(&target_ip_addr), l) == -1) {
-		fprintf(stderr, "%s\n", libnet_geterror(l));
-		libnet_destroy(l);
-		return EXIT_FAILURE;
-	}
-
-	if (libnet_autobuild_ethernet (mac_broadcast_addr, ETHERTYPE_ARP, l) == -1 ) {
-		fprintf(stderr, "%s\n", libnet_geterror(l));
-		libnet_destroy(l);
-		return EXIT_FAILURE;
-	}
-
-  printf("Lets send\n");
-	bytes_written = libnet_write(l);
-	if (bytes_written == -1)
-	  fprintf(stderr, "%s\n", libnet_geterror(l));
 
 	libnet_destroy(l);
 
-	sleep(1);
+  printf("Waiting for requests...\n");
+	sleep(5);
 	/* End cap thread */
   pcap_breakloop(caps.ctx);
 
@@ -118,6 +135,5 @@ int main() {
 		printf("%s\n", list->ip);
 		list = list->next;
 	}
-	printf("%s\n", list->ip);
-
+	if(list != NULL)printf("%s\n", list->ip);
 }

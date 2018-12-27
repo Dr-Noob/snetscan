@@ -26,14 +26,20 @@ struct arp_hdr {
 /* We assume we can just receive ARP here */
 void got_packet (u_char *args, const struct pcap_pkthdr *pkthdr, const u_char *packet) {
   struct host_list *tmp = (struct host_list *)args;
+	bool repeated = false;
 	char sourceip[16];
 	const struct arp_hdr *arp = (struct arp_hdr *)(packet + SIZE_ETHERNET);
   snprintf (sourceip, 16, "%d.%d.%d.%d", arp->arp_sip[0], arp->arp_sip[1], arp->arp_sip[2], arp->arp_sip[3]);
 
-  while(tmp->next != NULL)
+  while(!repeated && tmp->next != NULL) {
     tmp = tmp->next;
-  tmp->next = malloc(sizeof(struct host_list));
-  strncpy(tmp->next->ip, sourceip, 16);
+		if(strcmp(tmp->ip,sourceip) == 0)repeated = true;
+	}
+	if(!repeated) {
+		tmp->next = malloc(sizeof(struct host_list));
+		tmp->next->next = NULL;
+		strncpy(tmp->next->ip, sourceip, 16);
+	}
 }
 
 void* cap(void* args) {
@@ -56,6 +62,7 @@ void* cap(void* args) {
 
   *s->ok = true;
   s->list = malloc(sizeof(struct host_list));
+	s->list->next = NULL;
 
 	if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
 	  fprintf(stderr, "%s\n", errbuf);
@@ -100,11 +107,10 @@ void* cap(void* args) {
 		*s->ok = false;
 		if(sem_post(s->sem) == -1)
 	    perror("client");
-			
+
 		return NULL;
   }
 
-  printf("Capture ready\n");
   if(sem_post(s->sem) == -1) {
     perror("client");
 		*s->ok = false;
