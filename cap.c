@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "cap.h"
 
@@ -53,15 +54,24 @@ void* cap(void* args) {
 	const u_char *packet;
 	struct pcap_pkthdr header;
 
+  *s->ok = true;
   s->list = malloc(sizeof(struct host_list));
 
 	if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
 	  fprintf(stderr, "%s\n", errbuf);
+		*s->ok = false;
+		if(sem_post(s->sem) == -1)
+	    perror("client");
+
 	  return NULL;
 	}
 
   if ((handle = pcap_open_live(dev, BUFSIZ, 1, 100, errbuf)) == NULL) {
     fprintf(stderr, "%s\n", errbuf);
+		*s->ok = false;
+		if(sem_post(s->sem) == -1)
+	    perror("client");
+
     return NULL;
   }
 
@@ -69,27 +79,41 @@ void* cap(void* args) {
 
 	if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
 		 fprintf(stderr, "%s\n", pcap_geterr(handle));
+		 *s->ok = false;
+		 if(sem_post(s->sem) == -1)
+ 	    perror("client");
+
 		 return NULL;
   }
 
 	if (pcap_setfilter(handle, &fp) == -1) {
 		fprintf(stderr, "%s\n", pcap_geterr(handle));
+		*s->ok = false;
+		if(sem_post(s->sem) == -1)
+	    perror("client");
+
 		return NULL;
 	}
 
   if(pcap_setnonblock(handle, 1, errbuf) == -1) {
     fprintf(stderr, "%s\n", errbuf);
+		*s->ok = false;
+		if(sem_post(s->sem) == -1)
+	    perror("client");
+			
 		return NULL;
   }
 
   printf("Capture ready\n");
   if(sem_post(s->sem) == -1) {
     perror("client");
+		*s->ok = false;
     return NULL;
   }
 
 	if(pcap_loop(handle, -1, got_packet, (u_char *)s->list) == -1) {
 		fprintf(stderr, "%s\n", pcap_geterr(handle));
+		*s->ok = false;
 		return NULL;
 	}
 

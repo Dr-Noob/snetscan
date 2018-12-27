@@ -3,6 +3,7 @@
 
 #include <pcap.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
 struct host_list {
   char ip [16];
@@ -13,6 +14,7 @@ struct host_list {
 struct cap_struct {
   sem_t  *sem;
   pcap_t *ctx;
+  bool   *ok;
   struct host_list *list;
 };
 

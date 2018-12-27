@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <pcap.h>
+#include <stdbool.h>
 
 #include "cap.h"
 
@@ -12,7 +13,7 @@ int main() {
 	int bytes_written;
 	char errbuf[LIBNET_ERRBUF_SIZE];
 	u_int8_t mac_broadcast_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-	u_int8_t mac_zero_addr[6] =      {0x0,   0x0,  0x0,  0x0,  0x0,  0x0};
+	u_int8_t mac_zero_addr[6]      = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
 
   /* This host */
 	const char* devname;
@@ -21,12 +22,13 @@ int main() {
 
 	/* Target host */
 	u_int32_t target_ip_addr;
-	char target_ip_addr_str[16] = "192.168.1.1";
+	char target_ip_addr_str[16] = "192.168.1.61";
 
   /* Capture thread */
 	sem_t thread_sem;
 	pthread_t cap_thread;
   struct cap_struct caps;
+	struct host_list *list;
 
 	if(sem_init(&thread_sem, 0 , 0) == -1) {
     perror("client");
@@ -34,6 +36,7 @@ int main() {
   }
 
 	caps.sem = &thread_sem;
+	caps.ok = malloc(sizeof(bool));
 
 	if(pthread_create(&cap_thread, NULL, &cap, &caps) == -1) {
     perror("pthread_create");
@@ -44,6 +47,9 @@ int main() {
     perror("client");
     return EXIT_FAILURE;
   }
+
+	if(!*caps.ok)
+	  return EXIT_FAILURE;
 
 	if ((l = libnet_init(LIBNET_LINK, NULL, errbuf)) == NULL) {
 		fprintf(stderr, "libnet_init: %s\n", errbuf);
@@ -105,8 +111,9 @@ int main() {
     perror("pthread_join");
     return EXIT_FAILURE;
   }
+	free(caps.ok);
 
-	struct host_list *list = caps.list->next;
+	list = caps.list->next;
 	while(list->next != NULL) {
 		printf("%s\n", list->ip);
 		list = list->next;
