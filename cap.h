@@ -4,10 +4,12 @@
 #include <pcap.h>
 #include <semaphore.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 struct host_list {
-  char ip [16];
-  char mac[18];
+  uint32_t ip;
+  char ip_str [16];
+  char mac_str[18];
   struct host_list *next;
 };
 

@@ -120,7 +120,7 @@ int main() {
 	libnet_destroy(l);
 
   printf("Waiting for requests...\n");
-	sleep(5);
+	sleep(1);
 	/* End cap thread */
   pcap_breakloop(caps.ctx);
 
@@ -130,12 +130,12 @@ int main() {
   }
 	free(caps.ok);
 
-  printf("\n%-18s %-18s\n", "IP Adress", "MAC Adress");
+  printf("\n%-18s %-18s\n", "IP Addess", "MAC Address");
 	list = caps.list->next;
 	while(list->next != NULL) {
-		printf("%-18s %-18s\n", list->ip, list->mac);
+		printf("%-18s %-18s\n", list->ip_str, list->mac_str);
 		list = list->next;
 	}
 	if(list != NULL)
-	  printf("%-18s %-18s\n", list->ip, list->mac);
+	  printf("%-18s %-18s\n", list->ip_str, list->mac_str);
 }
