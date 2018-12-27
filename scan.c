@@ -130,10 +130,12 @@ int main() {
   }
 	free(caps.ok);
 
+  printf("\n%-18s %-18s\n", "IP Adress", "MAC Adress");
 	list = caps.list->next;
 	while(list->next != NULL) {
-		printf("%s\n", list->ip);
+		printf("%-18s %-18s\n", list->ip, list->mac);
 		list = list->next;
 	}
-	if(list != NULL)printf("%s\n", list->ip);
+	if(list != NULL)
+	  printf("%-18s %-18s\n", list->ip, list->mac);
 }

@@ -28,8 +28,11 @@ void got_packet (u_char *args, const struct pcap_pkthdr *pkthdr, const u_char *p
   struct host_list *tmp = (struct host_list *)args;
 	bool repeated = false;
 	char sourceip[16];
+	char sourcemac[18];
 	const struct arp_hdr *arp = (struct arp_hdr *)(packet + SIZE_ETHERNET);
-  snprintf (sourceip, 16, "%d.%d.%d.%d", arp->arp_sip[0], arp->arp_sip[1], arp->arp_sip[2], arp->arp_sip[3]);
+	
+  snprintf (sourceip,  16, "%d.%d.%d.%d", arp->arp_sip[0], arp->arp_sip[1], arp->arp_sip[2], arp->arp_sip[3]);
+	snprintf (sourcemac, 18, "%x:%x:%x:%d:%x:%x", arp->arp_sha[0], arp->arp_sha[1], arp->arp_sha[2], arp->arp_sha[3], arp->arp_sha[4], arp->arp_sha[5]);
 
   while(!repeated && tmp->next != NULL) {
     tmp = tmp->next;
@@ -39,6 +42,7 @@ void got_packet (u_char *args, const struct pcap_pkthdr *pkthdr, const u_char *p
 		tmp->next = malloc(sizeof(struct host_list));
 		tmp->next->next = NULL;
 		strncpy(tmp->next->ip, sourceip, 16);
+		strncpy(tmp->next->mac, sourcemac, 18);
 	}
 }
 
