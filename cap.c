@@ -63,8 +63,6 @@ void* cap(void* args) {
 	struct cap_struct *s = (struct cap_struct*)args;
 
 	pcap_t *handle;
-	char dev[] = "wlp1s0";
-	//char dev[] = "enp0s20f0u5";
 	char errbuf[PCAP_ERRBUF_SIZE];
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
@@ -81,7 +79,7 @@ void* cap(void* args) {
   s->list = malloc(sizeof(struct host_list));
 	s->list->next = NULL;
 
-	if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
+	if (pcap_lookupnet(s->dev, &net, &mask, errbuf) == -1) {
 	  fprintf(stderr, "%s\n", errbuf);
 		*s->ok = false;
 		if(sem_post(s->sem) == -1)
@@ -90,7 +88,7 @@ void* cap(void* args) {
 	  return NULL;
 	}
 
-  if ((handle = pcap_open_live(dev, BUFSIZ, 1, 100, errbuf)) == NULL) {
+  if ((handle = pcap_open_live(s->dev, BUFSIZ, 1, 100, errbuf)) == NULL) {
     fprintf(stderr, "%s\n", errbuf);
 		*s->ok = false;
 		if(sem_post(s->sem) == -1)

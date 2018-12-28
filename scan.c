@@ -75,6 +75,19 @@ int main() {
   struct cap_struct caps;
 	struct host_list *list;
 
+	if ((l = libnet_init(LIBNET_LINK, NULL, errbuf)) == NULL) {
+		fprintf(stderr, "libnet_init: %s\n", errbuf);
+		return EXIT_FAILURE;
+	}
+
+	if((devname = libnet_getdevice(l)) == NULL) {
+		fprintf(stderr, "%s\n", libnet_geterror(l));
+		libnet_destroy(l);
+		return EXIT_FAILURE;
+	}
+
+	printf("Using interface: '%s'\n",devname);
+
 	if(sem_init(&thread_sem, 0 , 0) == -1) {
     perror("client");
     return EXIT_FAILURE;
@@ -82,6 +95,7 @@ int main() {
 
 	caps.sem = &thread_sem;
 	caps.ok = malloc(sizeof(bool));
+	caps.dev = devname;
 
 	if(pthread_create(&cap_thread, NULL, &cap, &caps) == -1) {
     perror("pthread_create");
@@ -95,19 +109,6 @@ int main() {
 
 	if(!*caps.ok)
 	  return EXIT_FAILURE;
-
-	if ((l = libnet_init(LIBNET_LINK, NULL, errbuf)) == NULL) {
-		fprintf(stderr, "libnet_init: %s\n", errbuf);
-		return EXIT_FAILURE;
-	}
-
-	if((devname = libnet_getdevice(l)) == NULL) {
-		fprintf(stderr, "%s\n", libnet_geterror(l));
-		libnet_destroy(l);
-		return EXIT_FAILURE;
-	}
-
-	printf("Using interface: '%s'\n",devname);
 
 	if (pcap_lookupnet(devname, &net, &mask, pcap_errbuf) == -1) {
 		fprintf(stderr, "%s\n", errbuf);
