@@ -1,5 +1,5 @@
-scan: Makefile scan.c cap.c cap.h macdb.csv
-	gcc scan.c cap.c -g -lnet -lpcap -pthread -o scan
+scan: Makefile scan.c cap.c cap.h printer.c printer.h macdb.csv
+	gcc scan.c cap.c printer.c -g -lnet -lpcap -pthread -o scan
 
 clean:
 	rm scan

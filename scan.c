@@ -7,50 +7,9 @@
 #include <stdbool.h>
 
 #include "cap.h"
-#define MACDB_FILE "./macdb.csv"
-
-char* get_mac_vendor_str(char* file, char* mac) {
-	char* vendor;
-	char* str = strchr(file, '\n');
-	char mac_str[6] = { mac[0] , mac[1], mac[3], mac[4], mac[6], mac[7] };
-
-  /* Search for mac */
-  while(str != NULL && strncmp(str + 1, mac_str, 6) != 0)
-    str = strchr(str + 1, '\n');
-
-  if(str != NULL) {
-		/* We found the mac */
-		str++;
-    char* tmp1 = str + 7;
-		char* tmp2;
-
-		/* If starts with '"', ends with '"' */
-		if(*tmp1 == '\"') {
-      tmp1++;
-      tmp2 = strchr(tmp1, '\"');
-		}
-		else
-			tmp2 = strchr(tmp1, ',');
-
-		vendor = malloc(sizeof(char)* (tmp2-tmp1 + 1));
-		memset(vendor, 0, (tmp2-tmp1 + 1));
-		strncpy(vendor, tmp1, tmp2-tmp1);
-	}
-	else {
-		vendor = malloc(sizeof(char)* 4);
-		memset(vendor, 0, 4);
-		strncpy(vendor, "???", 3);
-	}
-
-	return vendor;
-}
+#include "printer.h"
 
 int main() {
-	/* MAC db */
-	int dbfd;
-	char* file;
-	struct stat st;
-
   /* pcap */
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
@@ -173,38 +132,7 @@ int main() {
     perror("pthread_join");
     return EXIT_FAILURE;
   }
-	free(caps.ok);
+  free(caps.ok);
 
-  if((dbfd = open(MACDB_FILE, O_RDONLY)) == -1) {
-		fprintf(stderr, "WARNING: MAC vendors will not be shown\n");
-		perror("open");
-
-		printf("\n%-18s %-18s\n", "IP Addess", "MAC Address");
-		list = caps.list->next;
-		while(list->next != NULL) {
-			printf("%-18s %-18s\n", list->ip_str, list->mac_str);
-			list = list->next;
-		}
-		if(list != NULL)
-		  printf("%-18s %-18s\n", list->ip_str, list->mac_str);
-	}
-	else {
-		if(stat(MACDB_FILE, &st) != 0) {
-	    perror("stat");
-			return EXIT_FAILURE;
-	  }
-
-	  file = malloc(sizeof(char)* st.st_size);
-		read(dbfd, file, st.st_size);
-
-	  printf("\n%-18s %-18s\n", "IP Addess", "MAC Address");
-		list = caps.list->next;
-		while(list->next != NULL) {
-			printf("%-18s %-18s(%s)\n", list->ip_str, list->mac_str, get_mac_vendor_str(file, list->mac_str));
-			list = list->next;
-		}
-		if(list != NULL)
-		  printf("%-18s %-18s(%s)\n", list->ip_str, list->mac_str, get_mac_vendor_str(file, list->mac_str));
-		free(file);
-	}
+	return print_hosts(caps.list->next, src_ip_addr);
 }
