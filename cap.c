@@ -35,7 +35,7 @@ void got_packet (u_char *args, const struct pcap_pkthdr *pkthdr, const u_char *p
 	const struct arp_hdr *arp = (struct arp_hdr *)(packet + SIZE_ETHERNET);
 
   snprintf (sourceip,  16, "%d.%d.%d.%d", arp->arp_sip[0], arp->arp_sip[1], arp->arp_sip[2], arp->arp_sip[3]);
-	snprintf (sourcemac, 18, "%x:%x:%x:%x:%x:%x", arp->arp_sha[0], arp->arp_sha[1], arp->arp_sha[2], arp->arp_sha[3], arp->arp_sha[4], arp->arp_sha[5]);
+	snprintf (sourcemac, 18, "%02X:%02X:%02X:%02X:%02X:%02X", arp->arp_sha[0], arp->arp_sha[1], arp->arp_sha[2], arp->arp_sha[3], arp->arp_sha[4], arp->arp_sha[5]);
   ip = inet_addr(sourceip);
 
   while(!repeated && tmp->next != NULL && tmp->next->ip <= ip) {
