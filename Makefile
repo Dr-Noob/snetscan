@@ -1,8 +1,8 @@
-scan: Makefile scan.c cap.c cap.h printer.c printer.h macdb.csv
-	gcc scan.c cap.c printer.c -g -lnet -lpcap -pthread -o scan
+snetscan: Makefile scan.c cap.c cap.h printer.c printer.h args.c args.h macdb.csv
+	gcc scan.c cap.c printer.c args.c -g -lnet -lpcap -pthread -o snetscan
 
 clean:
-	rm scan
+	rm snetscan
 
 macdb.csv:
 	wget http://standards-oui.ieee.org/oui/oui.csv
@@ -10,4 +10,4 @@ macdb.csv:
 	rm oui.csv
 
 run: scan
-	sudo ./scan
+	sudo ./snetscan

@@ -6,10 +6,47 @@
 #include <pcap.h>
 #include <stdbool.h>
 
+#include "args.h"
 #include "cap.h"
 #include "printer.h"
 
-int main() {
+#define RESET   "\033[0m"
+#define BOLD    "\033[1m"
+static const char* VERSION = "0.09";
+
+void printHelp(char *argv[]) {
+	printf("Usage: %s --dev DEVICE [--help]\n\
+       Options: \n\
+       --dev    Set network interface\n\
+       --help   Print this help and exit\n",
+			argv[0]);
+}
+
+void printInterfaces() {
+	char errbuf[PCAP_ERRBUF_SIZE];
+	pcap_if_t *interfaces;
+	pcap_if_t *temp;
+
+	if(pcap_findalldevs(&interfaces, errbuf) == -1) {
+		printf("%s\n", errbuf);
+		return;
+	}
+
+  printf("Available devices are: \n");
+	for(temp=interfaces; temp != NULL; temp=temp->next)
+		if(temp->addresses != NULL)
+			printf("       * " BOLD "%s" RESET "\n",temp->name);
+
+	pcap_freealldevs(interfaces);
+}
+
+int main(int argc, char* argv[]) {
+	parseArgs(argc, argv);
+  if(showHelp()) {
+		printHelp(argv);
+		return EXIT_SUCCESS;
+	}
+
   /* pcap */
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
@@ -34,14 +71,16 @@ int main() {
   struct cap_struct caps;
 	struct host_list *list;
 
-	if ((l = libnet_init(LIBNET_LINK, NULL, errbuf)) == NULL) {
-		fprintf(stderr, "libnet_init: %s\n", errbuf);
-		return EXIT_FAILURE;
+  /* User did not specify any device */
+	if((devname = getDevice()) == NULL) {
+		printf("WARNING: DEVICE option is mandatory\n");
+		printInterfaces();
+		printHelp(argv);
+		return EXIT_SUCCESS;
 	}
 
-	if((devname = libnet_getdevice(l)) == NULL) {
-		fprintf(stderr, "%s\n", libnet_geterror(l));
-		libnet_destroy(l);
+	if ((l = libnet_init(LIBNET_LINK, NULL, errbuf)) == NULL) {
+		fprintf(stderr, "libnet_init: %s\n", errbuf);
 		return EXIT_FAILURE;
 	}
 
