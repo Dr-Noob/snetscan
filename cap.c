@@ -31,7 +31,7 @@ void got_packet (u_char *args, const struct pcap_pkthdr *pkthdr, const u_char *p
 	bool repeated = false;
 	char sourceip[16];
 	char sourcemac[18];
-	int ip;
+	uint32_t ip;
 	const struct arp_hdr *arp = (struct arp_hdr *)(packet + SIZE_ETHERNET);
 
   snprintf (sourceip,  16, "%d.%d.%d.%d", arp->arp_sip[0], arp->arp_sip[1], arp->arp_sip[2], arp->arp_sip[3]);

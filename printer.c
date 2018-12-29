@@ -44,7 +44,7 @@ char* get_mac_vendor_str(char* file, char* mac) {
 	else {
 		vendor = malloc(sizeof(char)* 4);
 		memset(vendor, 0, 4);
-		strncpy(vendor, "???", 3);
+		strncpy(vendor, "???", 4);
 	}
 
 	return vendor;
@@ -66,7 +66,7 @@ void print_host(char* file, char* ip_str, char* mac_str, char* vendor, u_int32_t
 
 }
 
-int print_hosts(struct host_list* list, u_int32_t this_host) {
+bool print_hosts(struct host_list* list, u_int32_t this_host) {
 	int dbfd;
 	char* file = NULL;
 	struct stat st;
@@ -78,7 +78,7 @@ int print_hosts(struct host_list* list, u_int32_t this_host) {
   else {
     if(stat(MACDB_FILE, &st) != 0) {
       perror("stat");
-      return EXIT_FAILURE;
+      return false;
     }
 
     file = malloc(sizeof(char)* st.st_size);
@@ -93,4 +93,6 @@ int print_hosts(struct host_list* list, u_int32_t this_host) {
   if(list != NULL)
     print_host(file, list->ip_str, list->mac_str, get_mac_vendor_str(file, list->mac_str), list->ip, this_host);
   free(file);
+
+  return true;
 }

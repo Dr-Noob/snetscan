@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_SUCCESS;
 	}
 
-	if ((l = libnet_init(LIBNET_LINK, NULL, errbuf)) == NULL) {
+	if ((l = libnet_init(LIBNET_LINK, devname, errbuf)) == NULL) {
 		fprintf(stderr, "libnet_init: %s\n", errbuf);
 		return EXIT_FAILURE;
 	}
@@ -113,13 +113,13 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if ((src_ip_addr = libnet_get_ipaddr4(l)) == -1 ) {
+	if ((src_ip_addr = libnet_get_ipaddr4(l)) == (u_int32_t)-1) {
 		fprintf(stderr, "%s\n", libnet_geterror(l));
 		libnet_destroy(l);
 		return EXIT_FAILURE;
 	}
 
-	if ((src_mac_addr = libnet_get_hwaddr(l)) == NULL ) {
+	if ((src_mac_addr = libnet_get_hwaddr(l)) == NULL) {
 		fprintf(stderr, "%s\n", libnet_geterror(l));
 		libnet_destroy(l);
 		return EXIT_FAILURE;
@@ -128,14 +128,14 @@ int main(int argc, char* argv[]) {
   mask = htonl(mask);
   uint32_t network_address   = htonl(src_ip_addr) & mask;
   uint32_t broadcast_address = htonl(src_ip_addr) | ~mask;
-	printf("Scanning from %d.%d.%d.%d to %d.%d.%d.%d\n",   (network_address + 1 & 0xFF000000) >> 24,
-																						             (network_address + 1 & 0x00FF0000) >> 16,
-																						             (network_address + 1 & 0x0000FF00) >> 8,
-																							            network_address + 1 & 0x000000FF,
-																											 (broadcast_address - 1 & 0xFF000000) >> 24,
-																											 (broadcast_address - 1 & 0x00FF0000) >> 16,
-																											 (broadcast_address - 1 & 0x0000FF00) >> 8,
-																												broadcast_address - 1 & 0x000000FF);
+	printf("Scanning from %d.%d.%d.%d to %d.%d.%d.%d\n",   ((network_address + 1) & 0xFF000000) >> 24,
+																						             ((network_address + 1) & 0x00FF0000) >> 16,
+																						             ((network_address + 1) & 0x0000FF00) >> 8,
+																							            (network_address + 1) & 0x000000FF,
+																											 ((broadcast_address - 1) & 0xFF000000) >> 24,
+																											 ((broadcast_address - 1) & 0x00FF0000) >> 16,
+																											 ((broadcast_address - 1) & 0x0000FF00) >> 8,
+																												(broadcast_address - 1) & 0x000000FF);
 
 	for (uint32_t ip = network_address + 1; ip < broadcast_address; ip++) {
 	  uint32_t target_ip_addr = ntohl(ip);

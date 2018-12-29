@@ -5,6 +5,6 @@
 
 #include "cap.h"
 
-int print_hosts(struct host_list* list, u_int32_t this_host);
+bool print_hosts(struct host_list* list, u_int32_t this_host);
 
 #endif
