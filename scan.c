@@ -12,14 +12,19 @@
 
 #define RESET   "\033[0m"
 #define BOLD    "\033[1m"
-static const char* VERSION = "0.09";
+static const char* VERSION = "0.1";
 
 void printHelp(char *argv[]) {
-	printf("Usage: %s --dev DEVICE [--help]\n\
+	printf("Usage: %s --dev DEVICE [--help] [--version]\n\
        Options: \n\
-       --dev    Set network interface\n\
-       --help   Print this help and exit\n",
+       --dev      Set network interface\n\
+       --help     Print this help and exit\n\
+       --version  Print snetscan version and exit\n",
 			argv[0]);
+}
+
+void printVersion() {
+	printf("snetscan v%s\n",VERSION);
 }
 
 void printInterfaces() {
@@ -44,6 +49,11 @@ int main(int argc, char* argv[]) {
 	parseArgs(argc, argv);
   if(showHelp()) {
 		printHelp(argv);
+		return EXIT_SUCCESS;
+	}
+
+	if(showVersion()) {
+		printVersion();
 		return EXIT_SUCCESS;
 	}
 

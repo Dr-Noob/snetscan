@@ -5,11 +5,14 @@
 
 #define ARG_STR_HELP     "help"
 #define ARG_STR_DEVICE   "dev"
+#define ARG_STR_VERSION "version"
 #define ARG_CHAR_HELP     'h'
 #define ARG_CHAR_DEVICE   'd'
+#define ARG_CHAR_VERSION 'v'
 
 struct args_struct {
   bool help_flag;
+  bool version_flag;
   char* device;
 };
 
@@ -28,6 +31,7 @@ void parseArgs(int argc, char* argv[]) {
   static struct option long_options[] = {
       {ARG_STR_HELP,     no_argument,       0, ARG_CHAR_HELP    },
       {ARG_STR_DEVICE,   required_argument, 0, ARG_CHAR_DEVICE  },
+      {ARG_STR_VERSION,  no_argument,       0, ARG_CHAR_VERSION },
       {0, 0, 0, 0}
   };
 
@@ -36,6 +40,8 @@ void parseArgs(int argc, char* argv[]) {
   while (c != -1) {
      if(c == ARG_CHAR_HELP)
        args.help_flag  = true;
+     else if (c == ARG_CHAR_VERSION)
+       args.version_flag = true;
      else if (c == ARG_CHAR_DEVICE)
        args.device = optarg;
      else if(c == '?') {
@@ -58,6 +64,10 @@ void parseArgs(int argc, char* argv[]) {
 
 bool showHelp() {
   return args.help_flag;
+}
+
+bool showVersion() {
+  return args.version_flag;
 }
 
 char* getDevice() {

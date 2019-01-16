@@ -23,6 +23,13 @@ Primarily, you will need to install **wget** to download the csv and both **libn
     sudo apt-get install libnet-dev
     sudo apt-get install libpcap-dev
 
+* **Fedora**:
+
+
+    sudo yum install wget
+    sudo yum install libnet-devel
+    sudo yum install libpcap-devel
+
 * **Arch Linux**:
 
 

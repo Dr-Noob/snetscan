@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 bool showHelp();
+bool showVersion();
 char* getDevice();
 void parseArgs(int argc, char* argv[]);
 
