@@ -8,9 +8,11 @@
 
 #include "printer.h"
 
-#define MACDB_FILE "macdb.csv"
-#define RESET   "\033[0m"
-#define BOLD    "\033[1m"
+#define MACDB_FILE  "macdb.csv"
+#define MACDB_PATH1 "./"
+#define MACDB_PATH2 "/usr/share/snetscan/"
+#define RESET       "\033[0m"
+#define BOLD        "\033[1m"
 
 char* get_mac_vendor_str(char* file, char* mac) {
   if(file == NULL) return NULL;
@@ -71,12 +73,12 @@ bool print_hosts(struct host_list* list, u_int32_t this_host) {
 	char* file = NULL;
 	struct stat st;
 
-  if((dbfd = open(MACDB_FILE, O_RDONLY)) == -1) {
+  if((dbfd = open(MACDB_PATH1 MACDB_FILE, O_RDONLY)) == -1 && (dbfd = open(MACDB_PATH2 MACDB_FILE, O_RDONLY)) == -1) {
     fprintf(stderr, "WARNING: MAC vendors will not be shown\n%s: ",MACDB_FILE);
     perror("open");
   }
   else {
-    if(stat(MACDB_FILE, &st) != 0) {
+    if(fstat(dbfd, &st) != 0) {
       perror("stat");
       return false;
     }
