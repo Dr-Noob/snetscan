@@ -73,6 +73,11 @@ bool print_hosts(struct host_list* list, u_int32_t this_host) {
 	char* file = NULL;
 	struct stat st;
 
+  if(list == NULL) {
+    fprintf(stderr, "WARNING: No hosts found!\n");
+    return true;
+  }
+
   if((dbfd = open(MACDB_PATH1 MACDB_FILE, O_RDONLY)) == -1 && (dbfd = open(MACDB_PATH2 MACDB_FILE, O_RDONLY)) == -1) {
     fprintf(stderr, "WARNING: MAC vendors will not be shown\n%s: ",MACDB_FILE);
     perror("open");
