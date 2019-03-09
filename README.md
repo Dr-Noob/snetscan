@@ -18,25 +18,33 @@ Primarily, you will need to install **wget** to download the csv and both **libn
 
 * **Debian based**:
 
-
-    sudo apt-get install wget
-    sudo apt-get install libnet-dev
-    sudo apt-get install libpcap-dev
+```
+sudo apt-get install wget
+sudo apt-get install libnet-dev
+sudo apt-get install libpcap-dev
+```
 
 * **Fedora**:
 
-
-    sudo yum install wget
-    sudo yum install libnet-devel
-    sudo yum install libpcap-devel
+```
+sudo yum install wget
+sudo yum install libnet-devel
+sudo yum install libpcap-devel
+```
 
 * **Arch Linux**:
 
+```
+sudo pacman -S wget
+sudo pacman -S libnet
+sudo pacman -S libpcap
+```
 
-    sudo pacman -S wget
-    sudo pacman -S libnet
-    sudo pacman -S libpcap
+__NOTE:__ You can install *snetscan* directly via AUR:
 
+```
+yaourt -S snetscan-git
+```
 
 ## Usage
 Compile the project on Linux with **make**. You need to tell the scanner the interface/device to use in the scan. You can check possible interfaces/devices by running the scanner with no arguments:
