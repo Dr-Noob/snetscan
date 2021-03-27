@@ -17,39 +17,40 @@
 char* get_mac_vendor_str(char* file, char* mac) {
   if(file == NULL) return NULL;
 
-	char* vendor;
-	char* str = strchr(file, '\n');
-	char mac_str[6] = { mac[0] , mac[1], mac[3], mac[4], mac[6], mac[7] };
+  char* vendor;
+  char* str = strchr(file, '\n');
+  char mac_str[6] = { mac[0] , mac[1], mac[3], mac[4], mac[6], mac[7] };
 
   /* Search for mac */
   while(str != NULL && strncmp(str + 1, mac_str, 6) != 0)
     str = strchr(str + 1, '\n');
 
   if(str != NULL) {
-		/* We found the mac */
-		str++;
+    /* We found the mac */
+    str++;
     char* tmp1 = str + 7;
-		char* tmp2;
+    char* tmp2;
 
-		/* If starts with '"', ends with '"' */
-		if(*tmp1 == '\"') {
+    /* If starts with '"', ends with '"' */
+    if(*tmp1 == '\"') {
       tmp1++;
       tmp2 = strchr(tmp1, '\"');
-		}
-		else
-			tmp2 = strchr(tmp1, ',');
+    }
+    else {
+      tmp2 = strchr(tmp1, ',');
+    }
 
-		vendor = malloc(sizeof(char)* (tmp2-tmp1 + 1));
-		memset(vendor, 0, (tmp2-tmp1 + 1));
-		strncpy(vendor, tmp1, tmp2-tmp1);
-	}
-	else {
-		vendor = malloc(sizeof(char)* 4);
-		memset(vendor, 0, 4);
-		strncpy(vendor, "???", 4);
-	}
+    vendor = malloc(sizeof(char)* (tmp2-tmp1 + 1));
+    memset(vendor, 0, (tmp2-tmp1 + 1));
+    strncpy(vendor, tmp1, tmp2-tmp1);
+  }
+  else {
+    vendor = malloc(sizeof(char)* 4);
+    memset(vendor, 0, 4);
+    strncpy(vendor, "???", 4);
+  }
 
-	return vendor;
+  return vendor;
 }
 
 void print_host(char* file, char* ip_str, char* mac_str, char* vendor, u_int32_t ip, u_int32_t this_host) {
@@ -69,9 +70,9 @@ void print_host(char* file, char* ip_str, char* mac_str, char* vendor, u_int32_t
 }
 
 bool print_hosts(struct host_list* list, u_int32_t this_host) {
-	int dbfd;
-	char* file = NULL;
-	struct stat st;
+  int dbfd;
+  char* file = NULL;
+  struct stat st;
 
   if(list == NULL) {
     fprintf(stderr, "WARNING: No hosts found!\n");
