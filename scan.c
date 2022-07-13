@@ -12,7 +12,7 @@
 
 #define RESET   "\033[0m"
 #define BOLD    "\033[1m"
-static const char* VERSION = "0.1";
+static const char* VERSION = "0.11";
 
 void printHelp(char *argv[]) {
   printf("Usage: %s --dev DEVICE [--help] [--version]\n\
@@ -45,6 +45,41 @@ void printInterfaces() {
   }
 
   pcap_freealldevs(interfaces);
+}
+
+/*
+ * Search for a network device that can
+ * be scanned. If more than one device is found,
+ * the function returns NULL, because in that case
+ * it is not clear what device should be used.
+ * If only one is found, that device is returned.
+ */
+char* getDefaultDevice() {
+  char* devname = NULL;
+  char errbuf[PCAP_ERRBUF_SIZE];
+  pcap_if_t *interfaces;
+  pcap_if_t *temp;
+
+  if(pcap_findalldevs(&interfaces, errbuf) == -1) {
+    printf("%s\n", errbuf);
+    return NULL;
+  }
+
+  bool found = false;
+  for(temp=interfaces; temp != NULL; temp=temp->next) {
+    if(!(temp->flags & PCAP_IF_LOOPBACK) &&
+      (temp->flags & PCAP_IF_CONNECTION_STATUS) == PCAP_IF_CONNECTION_STATUS_CONNECTED) {
+      if(found) {
+        return NULL;
+      }
+      else {
+        found = true;
+        devname = temp->name;
+      }
+    }
+  }
+
+  return devname;
 }
 
 int main(int argc, char* argv[]) {
@@ -86,10 +121,15 @@ int main(int argc, char* argv[]) {
 
   /* User did not specify any device */
   if((devname = getDevice()) == NULL) {
-    printf("WARNING: DEVICE option is mandatory\n");
-    printInterfaces();
-    printHelp(argv);
-    return EXIT_SUCCESS;
+    /* Try to find the interface in use */
+    devname = getDefaultDevice();
+
+    if(devname == NULL) {
+      printf("ERROR: DEVICE option was not specified and no device could be selected automatically\n");
+      printInterfaces();
+      printHelp(argv);
+      return EXIT_SUCCESS;
+    }
   }
 
   if ((l = libnet_init(LIBNET_LINK, devname, errbuf)) == NULL) {
