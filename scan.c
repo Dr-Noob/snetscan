@@ -47,6 +47,28 @@ void printInterfaces() {
   pcap_freealldevs(interfaces);
 }
 
+bool validForScan(pcap_if_t *iface) {
+  if(!(iface->flags & PCAP_IF_LOOPBACK) &&
+    #ifndef PCAP_IF_CONNECTION_STATUS
+      iface->flags & PCAP_IF_UP) {
+    #else
+      (iface->flags & PCAP_IF_CONNECTION_STATUS) == PCAP_IF_CONNECTION_STATUS_CONNECTED) {
+    #endif
+    if(iface->addresses != NULL) {
+      pcap_addr_t* list = iface->addresses;
+      for(; list->next != NULL; list = list->next) {
+        struct sockaddr* saddr = list->addr;
+        if(saddr->sa_family == AF_INET) {
+          //printf("Found candidate (%s) with address %s\n", iface->name, inet_ntoa(((struct sockaddr_in*)list->addr)->sin_addr));
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
 /*
  * Search for a network device that can
  * be scanned. If more than one device is found,
@@ -67,8 +89,7 @@ char* getDefaultDevice() {
 
   bool found = false;
   for(temp=interfaces; temp != NULL; temp=temp->next) {
-    if(!(temp->flags & PCAP_IF_LOOPBACK) &&
-      (temp->flags & PCAP_IF_CONNECTION_STATUS) == PCAP_IF_CONNECTION_STATUS_CONNECTED) {
+    if(validForScan(temp)) {
       if(found) {
         return NULL;
       }
